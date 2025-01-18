@@ -1,0 +1,156 @@
+[gd_scene load_steps=19 format=3 uid="uid://bjd0471lxcmbr"]
+
+[ext_resource type="Script" path="res://player/player_3d.gd" id="1_pkcfw"]
+[ext_resource type="PackedScene" uid="uid://prh35jb6tjtd" path="res://player/sophia_skin/sophia_skin.tscn" id="2_1dflv"]
+[ext_resource type="AudioStream" uid="uid://bhoyegbjust84" path="res://player/sounds/robot_land.wav" id="3_vj7fn"]
+[ext_resource type="AudioStream" uid="uid://b4x0f4pgfifoo" path="res://player/sounds/robot_jump.wav" id="4_ghefp"]
+[ext_resource type="PackedScene" uid="uid://chh6by1ar1jr5" path="res://pause_menu.tscn" id="5_6k8ou"]
+[ext_resource type="Script" path="res://scripts/state_machine.gd" id="6_2kpgm"]
+[ext_resource type="Script" path="res://scripts/debug.gd" id="6_ys1c1"]
+[ext_resource type="Script" path="res://scripts/idle_player_state.gd" id="7_ctpp1"]
+[ext_resource type="Script" path="res://scripts/walking_player_state.gd" id="8_6yv6v"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_e8pdu"]
+radius = 0.4
+
+[sub_resource type="Curve" id="Curve_3f17x"]
+_data = [Vector2(0, 0.742241), 0.0, 0.0, 0, 0, Vector2(0.139952, 0.986755), 0.129787, 0.129787, 0, 0, Vector2(0.631579, 1), 0.0, 0.0, 0, 0, Vector2(0.785885, 0.873668), -1.98736, -1.98736, 0, 0, Vector2(1, 0.0148119), -5.26067, 0.0, 0, 0]
+point_count = 5
+
+[sub_resource type="CurveTexture" id="CurveTexture_8asvs"]
+width = 32
+curve = SubResource("Curve_3f17x")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_tqdcj"]
+lifetime_randomness = 0.33
+emission_shape = 1
+emission_sphere_radius = 0.1
+direction = Vector3(0, 1, 0)
+spread = 90.0
+initial_velocity_min = 0.1
+initial_velocity_max = 0.35
+gravity = Vector3(0, 0.5, 0)
+tangential_accel_min = -2.23517e-06
+tangential_accel_max = 0.199998
+scale_min = 0.8
+scale_max = 1.2
+scale_curve = SubResource("CurveTexture_8asvs")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kpdwg"]
+shading_mode = 2
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.536729, 0.511356, 0.854902, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_vpbss"]
+material = SubResource("StandardMaterial3D_kpdwg")
+radius = 0.15
+height = 0.3
+radial_segments = 8
+rings = 8
+
+[sub_resource type="SeparationRayShape3D" id="SeparationRayShape3D_h1hkf"]
+length = 0.5
+slide_on_slope = true
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h1xbv"]
+bg_color = Color(0, 0, 0, 0.478431)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="Theme" id="Theme_mha5p"]
+MarginContainer/constants/margin_bottom = 10
+MarginContainer/constants/margin_left = 10
+MarginContainer/constants/margin_right = 10
+MarginContainer/constants/margin_top = 10
+PanelContainer/styles/panel = SubResource("StyleBoxFlat_h1xbv")
+
+[node name="Player3D" type="CharacterBody3D"]
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+axis_lock_angular_z = true
+script = ExtResource("1_pkcfw")
+
+[node name="CharacterCollisionShape" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("CapsuleShape3D_e8pdu")
+
+[node name="SophiaSkin" parent="." instance=ExtResource("2_1dflv")]
+unique_name_in_owner = true
+
+[node name="DustParticles" type="GPUParticles3D" parent="SophiaSkin"]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.136607, -0.190934)
+cast_shadow = 0
+gi_mode = 0
+amount = 10
+lifetime = 0.7
+explosiveness = 0.05
+process_material = SubResource("ParticleProcessMaterial_tqdcj")
+draw_pass_1 = SubResource("SphereMesh_vpbss")
+
+[node name="WallDustParticles" type="GPUParticles3D" parent="SophiaSkin"]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.03661, 0.309066)
+cast_shadow = 0
+gi_mode = 0
+emitting = false
+amount = 10
+lifetime = 0.7
+explosiveness = 0.05
+process_material = SubResource("ParticleProcessMaterial_tqdcj")
+draw_pass_1 = SubResource("SphereMesh_vpbss")
+
+[node name="LandingSound" type="AudioStreamPlayer3D" parent="."]
+unique_name_in_owner = true
+stream = ExtResource("3_vj7fn")
+volume_db = 1.0
+
+[node name="JumpSound" type="AudioStreamPlayer3D" parent="."]
+unique_name_in_owner = true
+stream = ExtResource("4_ghefp")
+volume_db = 1.0
+
+[node name="CameraPivot" type="Node3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.09401, 0)
+
+[node name="SpringArm3D" type="SpringArm3D" parent="CameraPivot"]
+transform = Transform3D(-1, 2.1052e-08, -1.40279e-07, -3.23484e-08, 0.929023, 0.370022, 1.38112e-07, 0.370022, -0.929023, 0, 0.33984, 0)
+shape = SubResource("SeparationRayShape3D_h1hkf")
+spring_length = 8.0
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot/SpringArm3D"]
+unique_name_in_owner = true
+transform = Transform3D(1, 3.19744e-14, 2.13163e-14, 0, 1, 0, 0, 0, 1, -2.4869e-14, 2.38419e-07, 10)
+current = true
+fov = 50.0
+
+[node name="PauseMenu" parent="." instance=ExtResource("5_6k8ou")]
+
+[node name="DebugPanel" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(200, 0)
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 210.0
+offset_bottom = 50.0
+theme = SubResource("Theme_mha5p")
+script = ExtResource("6_ys1c1")
+
+[node name="MarginContainer" type="MarginContainer" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="DebugPanel/MarginContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="PlayerStateMachine" type="Node" parent="." node_paths=PackedStringArray("CURRENT_STATE")]
+script = ExtResource("6_2kpgm")
+CURRENT_STATE = NodePath("IdlePlayerState")
+
+[node name="IdlePlayerState" type="Node" parent="PlayerStateMachine"]
+script = ExtResource("7_ctpp1")
+
+[node name="WalkingPlayerState" type="Node" parent="PlayerStateMachine"]
+script = ExtResource("8_6yv6v")
